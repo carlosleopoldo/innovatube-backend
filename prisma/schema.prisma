@@ -12,3 +12,31 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Modelo de Usuario
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String   // Asegúrate de encriptar las contraseñas en tu lógica de negocio
+  fullName  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relación con los videos favoritos
+  videos    Video[]  @relation("UserVideos")
+}
+
+// Modelo de Video
+model Video {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  url         String
+  thumbnail   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relación con los usuarios que lo han marcado como favorito
+  favoritedBy User[]   @relation("UserVideos")
+}
