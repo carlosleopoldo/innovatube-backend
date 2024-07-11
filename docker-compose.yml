@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  innovatube-backend:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - innovatube-postgres
+    environment:
+      - POSTGRES_USER=innovatube
+      - POSTGRES_PASSWORD=innovatube
+      - POSTGRES_DB=innovatube
+
+  innovatube-postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: innovatube
+      POSTGRES_PASSWORD: innovatube
+      POSTGRES_DB: innovatube
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+    driver: local
