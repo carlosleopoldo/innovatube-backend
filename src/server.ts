@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import bcrypt from 'bcryptjs';
-import { PrismaClient, User, PasswordReset } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -33,7 +33,7 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-    const existingUser: User | null = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { username: user },
     });
 
@@ -43,7 +43,7 @@ app.post('/register', async (req, res) => {
         .json({ message: 'Un usuario con este nombre de usuario ya existe.' });
     }
 
-    const existingEmail: User | null = await prisma.user.findUnique({
+    const existingEmail = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -55,7 +55,7 @@ app.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser: User = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         username: user,
         email,
@@ -84,7 +84,7 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    const userMatch: User | null = await prisma.user.findUnique({
+    const userMatch = await prisma.user.findUnique({
       where: { username: user },
     });
 
@@ -122,7 +122,7 @@ app.post('/forgot-password', async (req, res) => {
   }
 
   try {
-    const user: User | null = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -183,11 +183,10 @@ app.post('/reset-password/:token', async (req, res) => {
   }
 
   try {
-    const passwordReset: PasswordReset | null =
-      await prisma.passwordReset.findUnique({
-        where: { token },
-        include: { user: true },
-      });
+    const passwordReset = await prisma.passwordReset.findUnique({
+      where: { token },
+      include: { user: true },
+    });
 
     if (!passwordReset || passwordReset.expiresAt < new Date()) {
       return res.status(400).json({ message: 'Token inválido o expirado.' });
