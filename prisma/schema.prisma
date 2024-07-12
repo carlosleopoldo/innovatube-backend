@@ -15,28 +15,39 @@ datasource db {
 
 // Modelo de Usuario
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
-  password  String   // Asegúrate de encriptar las contraseñas en tu lógica de negocio
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  email     String     @unique
+  password  String
   fullName  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   // Relación con los videos favoritos
-  videos    Video[]  @relation("UserVideos")
+  videos    Video[]    @relation("UserVideos")
+  // Relación con los tokens de restablecimiento de contraseña
+  passwordResets PasswordReset[]
 }
 
 // Modelo de Video
 model Video {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   title       String
   description String?
   url         String
   thumbnail   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   // Relación con los usuarios que lo han marcado como favorito
-  favoritedBy User[]   @relation("UserVideos")
+  favoritedBy User[]     @relation("UserVideos")
+}
+
+// Modelo de token de restablecimiento de contraseña
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
 }
