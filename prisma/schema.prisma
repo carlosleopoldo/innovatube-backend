@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://innovatube:innovatube@192.168.247.2:5432/innovatube?schema=public"
+  url      = env("DATABASE_URL")
 }
 
 // Modelo de Usuario
