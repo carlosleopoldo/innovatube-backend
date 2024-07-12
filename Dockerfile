@@ -2,7 +2,8 @@ FROM node:alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-RUN npx prisma generate
+COPY .env.prod .env
+RUN npx prisma generate --schema ./prisma/schema.prisma
 COPY . .
 RUN npm run build
 EXPOSE 3000
