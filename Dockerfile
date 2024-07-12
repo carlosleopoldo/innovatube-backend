@@ -1,6 +1,7 @@
 FROM node:alpine
 WORKDIR /app
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm install
 COPY .env.prod .env
 RUN npx prisma generate --schema ./prisma/schema.prisma
