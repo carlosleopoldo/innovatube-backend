@@ -6,6 +6,7 @@ import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -14,6 +15,8 @@ const prisma = new PrismaClient();
 const jwtSecret: string = `${process.env.JWT_SECRET}`;
 
 app.use(bodyParser.json());
+
+app.use(cors());
 
 app.get('/', (req, res) => {
   res.send('API de InnovaTube');
