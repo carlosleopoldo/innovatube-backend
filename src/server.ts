@@ -393,5 +393,46 @@ app.post(
   }
 );
 
+// Endpoint para obtener los videos favoritos de un usuario
+app.get(
+  '/favorite-videos',
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+
+    try {
+      // Busca al usuario con los videos favoritos incluidos
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          videos: true, // Incluye todos los videos favoritos del usuario
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      res.status(200).json(
+        user.videos.map((video) => {
+          return {
+            id: video.id,
+            title: video.title,
+            thumbnail: video.thumbnail,
+            description: video.description,
+            link: video.url,
+            isFavorite: true,
+          };
+        })
+      );
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ message: 'Error al obtener los videos favoritos' });
+    }
+  }
+);
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor corriendo en el puerto: ${port}`));
