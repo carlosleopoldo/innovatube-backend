@@ -5,6 +5,7 @@ import cors from 'cors';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import express from 'express';
+import { link } from 'fs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import youtubeSearch from 'youtube-search';
@@ -261,11 +262,13 @@ app.get('/search', async (req, res) => {
   const query = req.query.q as any;
 
   if (!query) {
-    return res.status(400).json({ error: 'El parámetro de búsqueda es requerido' });
+    return res
+      .status(400)
+      .json({ error: 'El parámetro de búsqueda es requerido' });
   }
 
   const opts = {
-    maxResults: 10,
+    maxResults: 16,
     key: process.env.YOUTUBE_API_KEY,
     part: 'snippet',
     type: 'video',
@@ -276,7 +279,17 @@ app.get('/search', async (req, res) => {
       return res.status(500).json({ error: 'Error al buscar en YouTube' });
     }
 
-    res.json(results);
+    res.json(
+      results?.map((video) => {
+        return {
+          id: video.id,
+          title: video.title,
+          thumbnail: video.thumbnails?.high?.url,
+          description: video.description,
+          link: video.link,
+        };
+      })
+    );
   });
 });
 
