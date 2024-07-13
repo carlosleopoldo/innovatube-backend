@@ -20,8 +20,17 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
+type VideoType = {
+  id: string;
+  title: string;
+  thumbnail: string;
+  description: string;
+  link: string;
+  isFavorite?: boolean;
+};
+
 interface UserPayload {
-  id: number;
+  userId: number;
   username: string;
 }
 
@@ -44,7 +53,7 @@ export const authenticateToken = (
 
   if (!token) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET as string, (err, user) => {
     if (err) return res.sendStatus(403);
     req.user = user as UserPayload;
     next();
@@ -323,6 +332,66 @@ app.get('/search', async (req, res) => {
     );
   });
 });
+
+// Endpoint para marcar un video como favorito
+app.post(
+  '/mark-favorite',
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    const { video } = req.body.params as { video: VideoType };
+    const userId = req.user!.userId;
+
+    try {
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          videos: {
+            connectOrCreate: {
+              where: { url: video.link },
+              create: {
+                title: video.title,
+                description: video.description,
+                url: video.link,
+                thumbnail: video.thumbnail,
+              },
+            },
+          },
+        },
+      });
+
+      res.status(200).json({ message: 'Video marcado como favorito', user });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al marcar como favorito' });
+    }
+  }
+);
+
+// Endpoint para desmarcar un video como favorito
+app.post(
+  '/unmark-favorite',
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    const { video } = req.body.params as { video: VideoType };
+    const userId = req.user!.userId;
+
+    try {
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          videos: {
+            disconnect: { url: video.link },
+          },
+        },
+      });
+
+      res.status(200).json({ message: 'Video desmarcado como favorito', user });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al desmarcar como favorito' });
+    }
+  }
+);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor corriendo en el puerto: ${port}`));
