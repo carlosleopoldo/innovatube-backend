@@ -132,7 +132,7 @@ app.post('/forgot-password', async (req, res) => {
 
     const token = crypto.randomBytes(20).toString('hex');
     const expires = new Date();
-    expires.setHours(expires.getHours() + 1); // Token expira en 1 hora
+    expires.setHours(expires.getHours() + 2); // Token expira en 2 horas
 
     await prisma.passwordReset.create({
       data: {
@@ -171,6 +171,40 @@ app.post('/forgot-password', async (req, res) => {
   }
 });
 
+// Ruta para verificar token de restablecimiento de contraseña
+app.get('/verify-token/:token', async (req, res) => {
+  const { token } = req.params;
+  console.log('token', token);
+
+  try {
+    const passwordReset = await prisma.passwordReset.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!passwordReset) {
+      return res
+        .status(400)
+        .json({
+          message:
+            'Token no válido, no se encuentra el token en nuestro sistema.',
+        });
+    } else if (passwordReset.expiresAt < new Date()) {
+      return res
+        .status(400)
+        .json({
+          message:
+            'El token ha expirado, los token solo son válidos durante 2 horas.',
+        });
+    }
+
+    res.status(200).json({ data: { email: passwordReset.user.email } });
+  } catch (error) {
+    console.error('Error al verificar token:', error);
+    res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
 // Ruta para restablecer contraseña
 app.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
@@ -203,7 +237,9 @@ app.post('/reset-password/:token', async (req, res) => {
       where: { token },
     });
 
-    res.status(200).json({ message: 'Contraseña restablecida exitosamente.' });
+    res
+      .status(200)
+      .json({ data: { message: 'Contraseña restablecida exitosamente.' } });
   } catch (error) {
     console.error('Error al restablecer contraseña:', error);
     res.status(500).json({ message: 'Error interno del servidor.' });
