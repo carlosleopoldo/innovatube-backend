@@ -1,12 +1,13 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
-import nodemailer from 'nodemailer';
+import bcrypt from 'bcryptjs';
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import express from 'express';
 import jwt from 'jsonwebtoken';
-import cors from 'cors';
+import nodemailer from 'nodemailer';
+import youtubeSearch from 'youtube-search';
 
 dotenv.config();
 
@@ -253,6 +254,30 @@ app.post('/reset-password/:token', async (req, res) => {
     console.error('Error al restablecer contraseña:', error);
     res.status(500).json({ message: 'Error interno del servidor.' });
   }
+});
+
+// Ruta para buscar en YouTube
+app.get('/search', async (req, res) => {
+  const query = req.query.q as any;
+
+  if (!query) {
+    return res.status(400).json({ error: 'El parámetro de búsqueda es requerido' });
+  }
+
+  const opts = {
+    maxResults: 10,
+    key: process.env.YOUTUBE_API_KEY,
+    part: 'snippet',
+    type: 'video',
+  };
+
+  youtubeSearch(query, opts, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error al buscar en YouTube' });
+    }
+
+    res.json(results);
+  });
 });
 
 const port = process.env.PORT || 3000;
