@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { link } from 'fs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
@@ -19,6 +19,37 @@ const jwtSecret: string = `${process.env.JWT_SECRET}`;
 app.use(bodyParser.json());
 
 app.use(cors());
+
+interface UserPayload {
+  id: number;
+  username: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: UserPayload;
+    }
+  }
+}
+
+// Middleware para autenticar al usuario
+export const authenticateToken = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user as UserPayload;
+    next();
+  });
+};
 
 app.get('/', (req, res) => {
   res.send('API de InnovaTube');
