@@ -143,7 +143,9 @@ app.post('/forgot-password', async (req, res) => {
     });
 
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      host: 'smtp.zoho.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -152,19 +154,26 @@ app.post('/forgot-password', async (req, res) => {
 
     const mailOptions = {
       to: user.email,
-      from: process.env.EMAIL_USER,
-      subject: 'Recuperación de contraseña',
-      text: `Recibiste esto porque tú (u otra persona) solicitó la recuperación de la contraseña para tu cuenta.\n\n
-             Haz clic en el siguiente enlace, o pégalo en tu navegador para completar el proceso:\n\n
-             http://${req.headers.host}/#/reset-password/${token}\n\n
-             Si no solicitaste esto, ignora este correo y tu contraseña permanecerá sin cambios.\n`,
+      from: `"InnovaTube" <${process.env.EMAIL_USER}>`,
+      subject: 'Recuperación de contraseña - InnovaTube',
+      text: `Recibiste esto porque tú (u otra persona) solicitó la recuperación de la contraseña para tu cuenta en InnovaTube.\n\nHaz clic en el siguiente enlace, o pégalo en tu navegador para completar el proceso:\n\n${process.env.SITE_URL}/#/reset-password/${token}\n\nSi no solicitaste esto, ignora este correo y tu contraseña permanecerá sin cambios.\n`,
+      html: `
+    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+      <p>Recibiste esto porque tú (u otra persona) solicitó la recuperación de la contraseña para tu cuenta en <strong>InnovaTube</strong>.</p>
+      <p>Haz clic en el siguiente enlace, o pégalo en tu navegador para completar el proceso:</p>
+      <p><a href="${process.env.SITE_URL}/#/reset-password/${token}" style="color: #007BFF;">Restablecer Contraseña</a></p>
+      <p>Si no solicitaste esto, ignora este correo y tu contraseña permanecerá sin cambios.</p>
+      <br>
+      <p>Saludos,<br>El equipo de InnovaTube</p>
+    </div>
+  `,
     };
 
     await transporter.sendMail(mailOptions);
 
-    res
-      .status(200)
-      .json({ message: 'Correo de recuperación de contraseña enviado.' });
+    res.status(200).json({
+      data: { message: 'Correo de recuperación de contraseña enviado.' },
+    });
   } catch (error) {
     console.error('Error al enviar correo de recuperación:', error);
     res.status(500).json({ message: 'Error interno del servidor.' });
@@ -183,19 +192,15 @@ app.get('/verify-token/:token', async (req, res) => {
     });
 
     if (!passwordReset) {
-      return res
-        .status(400)
-        .json({
-          message:
-            'Token no válido, no se encuentra el token en nuestro sistema.',
-        });
+      return res.status(400).json({
+        message:
+          'Token no válido, no se encuentra el token en nuestro sistema.',
+      });
     } else if (passwordReset.expiresAt < new Date()) {
-      return res
-        .status(400)
-        .json({
-          message:
-            'El token ha expirado, los token solo son válidos durante 2 horas.',
-        });
+      return res.status(400).json({
+        message:
+          'El token ha expirado, los token solo son válidos durante 2 horas.',
+      });
     }
 
     res.status(200).json({ data: { email: passwordReset.user.email } });
