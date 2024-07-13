@@ -61,7 +61,7 @@ export const authenticateToken = (
 };
 
 app.get('/', (req, res) => {
-  res.send('API de InnovaTube');
+    res.status(200).json({ message: 'API de InnovaTube' });
 });
 
 // Ruta de registro de usuario
