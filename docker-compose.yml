@@ -14,7 +14,7 @@ services:
 
   innovatube-postgres:
     image: postgres
-    restart: always
+    restart: no
     environment:
       POSTGRES_USER: innovatube
       POSTGRES_PASSWORD: innovatube
